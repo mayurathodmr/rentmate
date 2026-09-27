@@ -1,0 +1,171 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Enquiries — RentMate</title>
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<div class="rm-layout">
+
+<aside class="rm-sidebar">
+
+<div class="rm-brand">
+<div class="rm-logo">R</div>
+RentMate
+</div>
+
+<nav class="rm-nav">
+<a href="/user/dashboard.html">🔎 Search</a>
+<a href="/user/saved.html">❤️ Saved</a>
+<a class="active" href="/user/requests.html">📩 Enquiries</a>
+</nav>
+
+</aside>
+
+<main class="rm-main">
+
+<header class="rm-topbar">
+<div class="rm-topbar-title">My Enquiries</div>
+</header>
+
+<div class="rm-content">
+
+<div class="rm-welcome">
+<div>
+<h1>Your enquiries</h1>
+<div class="rm-muted">
+Track messages you've sent to property owners.
+</div>
+</div>
+</div>
+
+<div class="rm-card">
+
+<div id="list">
+<div class="rm-loading">Loading...</div>
+</div>
+
+</div>
+
+</div>
+
+</main>
+</div>
+
+<script src="/js/rentmate-final.js"></script>
+
+<script>
+
+if(!RentMateFinal.token){
+ location.href="/login.html?redirect=/user/requests.html";
+}
+
+async function load(){
+
+ try{
+
+  const data=
+    await RentMateFinal.api(
+      "/api/enquiries/mine"
+    );
+
+  const list=data.enquiries||[];
+
+  if(!list.length){
+
+   listEl().innerHTML=`
+   <div class="rm-empty">
+   <div class="rm-empty-icon">📩</div>
+   <h3>No enquiries yet</h3>
+   <p class="rm-muted">
+   Open an approved property and send your first enquiry.
+   </p>
+   </div>`;
+
+   return;
+  }
+
+  listEl().innerHTML=`
+
+  <div class="rm-table-wrap">
+
+  <table class="rm-table">
+
+  <thead>
+  <tr>
+  <th>Property</th>
+  <th>Message</th>
+  <th>Status</th>
+  <th>Date</th>
+  </tr>
+  </thead>
+
+  <tbody>
+
+  ${list.map(e=>`
+
+  <tr>
+
+  <td>
+  <a href="/property.html?id=${encodeURIComponent(e.property_id)}">
+  View property
+  </a>
+  </td>
+
+  <td>
+  ${RentMateFinal.escape(e.message)}
+  </td>
+
+  <td>
+  <span class="rm-status">
+  ${RentMateFinal.escape(e.status)}
+  </span>
+  </td>
+
+  <td>
+  ${e.created_at
+   ? new Date(e.created_at).toLocaleString()
+   :"—"}
+  </td>
+
+  </tr>
+
+  `).join("")}
+
+  </tbody>
+
+  </table>
+
+  </div>
+  `;
+
+ }catch(e){
+
+  listEl().innerHTML=`
+  <div class="rm-empty">
+  <h3>Unable to load enquiries</h3>
+  <p>${RentMateFinal.escape(e.message)}</p>
+  </div>`;
+ }
+}
+
+function listEl(){
+ return document.getElementById("list");
+}
+
+load();
+
+</script>
+
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

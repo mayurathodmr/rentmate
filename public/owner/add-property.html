@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Add Property — RentMate</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  font-family:"DM Sans",sans-serif;
+  background:#f5f7fb;
+  color:#171c2d;
+}
+.nav{
+  height:72px;
+  padding:0 5%;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(18px);
+  border-bottom:1px solid #e8ebf1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  position:sticky;
+  top:0;
+  z-index:20;
+}
+.logo{
+  font-family:"Plus Jakarta Sans";
+  font-size:24px;
+  font-weight:800;
+}
+.logo span{color:#635bff}
+.back{
+  padding:10px 15px;
+  border:1px solid #e1e4eb;
+  border-radius:12px;
+  background:#fff;
+  cursor:pointer;
+  font-weight:600;
+}
+.wrap{
+  width:min(1000px,92%);
+  margin:32px auto 70px;
+}
+.hero{
+  margin-bottom:22px;
+}
+.hero h1{
+  font-family:"Plus Jakarta Sans";
+  font-size:32px;
+}
+.hero p{
+  color:#737b8e;
+  margin-top:7px;
+}
+.card{
+  background:#fff;
+  border:1px solid #e6e9f0;
+  border-radius:22px;
+  padding:25px;
+  margin-bottom:18px;
+  box-shadow:0 12px 35px rgba(30,40,70,.05);
+}
+.card h2{
+  font-family:"Plus Jakarta Sans";
+  font-size:19px;
+  margin-bottom:18px;
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(2,1fr);
+  gap:15px;
+}
+.field label{
+  display:block;
+  font-size:13px;
+  font-weight:700;
+  margin-bottom:7px;
+}
+input,select,textarea{
+  width:100%;
+  border:1px solid #dfe3eb;
+  background:#fff;
+  border-radius:12px;
+  padding:13px;
+  font:inherit;
+  outline:none;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:#635bff;
+  box-shadow:0 0 0 3px rgba(99,91,255,.09);
+}
+textarea{
+  min-height:120px;
+  resize:vertical;
+}
+.full{grid-column:1/-1}
+
+.location-box{
+  border:1px dashed #cfd3e0;
+  border-radius:17px;
+  padding:17px;
+  background:#fafaff;
+}
+.location-row{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.location-icon{
+  width:45px;
+  height:45px;
+  border-radius:13px;
+  background:#eeedff;
+  display:grid;
+  place-items:center;
+  font-size:22px;
+}
+.location-info{
+  flex:1;
+}
+.location-info b,
+.location-info span{
+  display:block;
+}
+.location-info span{
+  color:#777f91;
+  font-size:12px;
+  margin-top:4px;
+}
+.loc-btn{
+  border:0;
+  background:#635bff;
+  color:#fff;
+  padding:11px 14px;
+  border-radius:11px;
+  font-weight:700;
+  cursor:pointer;
+}
+.coords{
+  margin-top:12px;
+  font-size:12px;
+  color:#697184;
+  word-break:break-all;
+}
+
+.amenities{
+  display:flex;
+  flex-wrap:wrap;
+  gap:9px;
+}
+.amenity{
+  border:1px solid #dfe3eb;
+  border-radius:30px;
+  padding:9px 13px;
+  cursor:pointer;
+  font-size:13px;
+  user-select:none;
+}
+.amenity.active{
+  background:#635bff;
+  color:white;
+  border-color:#635bff;
+}
+
+.upload{
+  border:2px dashed #dfe3eb;
+  border-radius:17px;
+  padding:25px;
+  text-align:center;
+  cursor:pointer;
+  background:#fafbfe;
+}
+.upload:hover{
+  border-color:#635bff;
+}
+.upload-icon{
+  font-size:32px;
+}
+.upload b,
+.upload span{
+  display:block;
+}
+.upload span{
+  color:#7b8292;
+  font-size:13px;
+  margin-top:5px;
+}
+#photos{display:none}
+
+.preview{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-top:13px;
+}
+.preview-item{
+  position:relative;
+  height:120px;
+}
+.preview img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  border-radius:12px;
+}
+.preview button{
+  position:absolute;
+  right:5px;
+  top:5px;
+  width:25px;
+  height:25px;
+  border:0;
+  border-radius:50%;
+  background:#171a2a;
+  color:white;
+  cursor:pointer;
+}
+
+.notice{
+  padding:13px;
+  border-radius:13px;
+  background:#fff8e8;
+  color:#86651c;
+  font-size:13px;
+  line-height:1.6;
+}
+.submit{
+  width:100%;
+  border:0;
+  padding:16px;
+  border-radius:14px;
+  background:#635bff;
+  color:#fff;
+  font-size:16px;
+  font-weight:800;
+  cursor:pointer;
+}
+.submit:disabled{
+  opacity:.6;
+  cursor:not-allowed;
+}
+.result{
+  display:none;
+  margin-top:13px;
+  padding:13px;
+  border-radius:13px;
+  font-size:14px;
+}
+.result.show{display:block}
+.result.success{
+  background:#ecfbf3;
+  color:#147348;
+}
+.result.error{
+  background:#fff0f0;
+  color:#b32929;
+}
+
+@media(max-width:650px){
+  .grid{grid-template-columns:1fr}
+  .full{grid-column:auto}
+  .preview{grid-template-columns:repeat(2,1fr)}
+  .location-row{align-items:flex-start;flex-wrap:wrap}
+  .loc-btn{width:100%}
+  .hero h1{font-size:26px}
+}
+</style>
+<link rel="stylesheet" href="/css/rentmate-premium.css">
+<link rel="stylesheet" href="/css/rentmate-guidance.css">
+<link rel="stylesheet" href="/css/rentmate-student.css">
+<link rel="stylesheet" href="/css/rentmate-app.css">
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<nav class="nav">
+  <a href="/" class="logo">Rent<span>Mate</span></a>
+  <button class="back" onclick="history.back()">← Back</button>
+</nav>
+
+<main class="wrap">
+
+  <div class="hero">
+    <h1>List your property</h1>
+    <p>Add your real property details so genuine users can discover it.</p>
+  </div>
+
+  <form id="propertyForm">
+
+    <section class="card">
+      <h2>🏠 Basic information</h2>
+
+      <div class="grid">
+
+        <div class="field full">
+          <label>Property title *</label>
+          <input
+            id="title"
+            required
+            placeholder="Example: Spacious 1 BHK near College Road"
+          >
+        </div>
+
+        <div class="field">
+          <label>Property type *</label>
+          <select id="property_type" required>
+            <option value="">Select type</option>
+            <option value="Room">Room</option>
+            <option value="1 RK">1 RK</option>
+            <option value="Flat">Flat</option>
+            <option value="Apartment">Apartment</option>
+            <option value="House">House</option>
+            <option value="PG">PG</option>
+            <option value="Hostel">Hostel</option>
+            <option value="Villa">Villa</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>BHK</label>
+          <select id="bhk">
+            <option value="">Not applicable</option>
+            <option value="1 RK">1 RK</option>
+            <option value="1 BHK">1 BHK</option>
+            <option value="2 BHK">2 BHK</option>
+            <option value="3 BHK">3 BHK</option>
+            <option value="4 BHK">4 BHK</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Monthly rent (₹) *</label>
+          <input
+            id="rent"
+            type="number"
+            min="1"
+            required
+            placeholder="Actual monthly rent"
+          >
+        </div>
+
+        <div class="field">
+          <label>Security deposit (₹)</label>
+          <input
+            id="deposit"
+            type="number"
+            min="0"
+            placeholder="Actual deposit"
+          >
+        </div>
+
+        <div class="field">
+          <label>Area / locality *</label>
+          <input
+            id="area"
+            required
+            placeholder="Example: College Road"
+          >
+        </div>
+
+        <div class="field">
+          <label>City *</label>
+          <input
+            id="city"
+            required
+            placeholder="City"
+          >
+        </div>
+
+        <div class="field">
+          <label>State</label>
+          <input
+            id="state"
+            value="Maharashtra"
+            placeholder="State"
+          >
+        </div>
+
+        <div class="field">
+          <label>Area size (sq ft)</label>
+          <input
+            id="area_sqft"
+            type="number"
+            min="1"
+            placeholder="Example: 650"
+          >
+        </div>
+
+        <div class="field">
+          <label>Furnishing</label>
+          <select id="furnishing">
+            <option value="">Select</option>
+            <option value="Unfurnished">Unfurnished</option>
+            <option value="Semi Furnished">Semi Furnished</option>
+            <option value="Fully Furnished">Fully Furnished</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label>Available from</label>
+          <input id="available_from" type="date">
+        </div>
+
+      </div>
+    </section>
+
+    <section class="card">
+
+      <h2>📍 Exact property location</h2>
+
+      <div class="location-box">
+
+        <div class="location-row">
+
+          <div class="location-icon">📍</div>
+
+          <div class="location-info">
+            <b id="locationStatus">
+              Location not selected
+            </b>
+            <span>
+              Exact coordinates are used only for nearby-property discovery.
+            </span>
+          </div>
+
+          <button
+            type="button"
+            class="loc-btn"
+            id="locationBtn"
+          >
+            Use my location
+          </button>
+
+        </div>
+
+        <div class="coords" id="coordinates">
+          Latitude / longitude will appear here after permission is granted.
+        </div>
+
+      </div>
+
+      <br>
+
+      <div class="notice">
+        🔐 Your browser will ask for location permission.
+        RentMate will not generate fake coordinates. The property location
+        must come from the owner/device.
+      </div>
+
+    </section>
+
+    <section class="card">
+
+      <h2>✨ Amenities</h2>
+
+      <div class="amenities" id="amenities">
+
+        <div class="amenity" data-value="WiFi">Wi-Fi</div>
+        <div class="amenity" data-value="Parking">Parking</div>
+        <div class="amenity" data-value="Water">Water</div>
+        <div class="amenity" data-value="Power Backup">Power Backup</div>
+        <div class="amenity" data-value="AC">AC</div>
+        <div class="amenity" data-value="Attached Bathroom">Attached Bathroom</div>
+        <div class="amenity" data-value="Kitchen">Kitchen</div>
+        <div class="amenity" data-value="Security">Security</div>
+        <div class="amenity" data-value="Lift">Lift</div>
+        <div class="amenity" data-value="CCTV">CCTV</div>
+        <div class="amenity" data-value="Furnished">Furnished</div>
+
+      </div>
+
+    </section>
+
+    <section class="card">
+
+      <h2>📸 Property photos</h2>
+
+      <label class="upload" for="photos">
+        <div class="upload-icon">📷</div>
+        <b>Upload real property photos</b>
+        <span>
+          Select clear photos of the actual property.
+        </span>
+      </label>
+
+      <input
+        id="photos"
+        type="file"
+        accept="image/*"
+        multiple
+      >
+
+      <div class="preview" id="preview"></div>
+
+    </section>
+
+    <section class="card">
+
+      <h2>📝 Description</h2>
+
+      <textarea
+        id="description"
+        placeholder="Describe the actual property, nearby facilities, rules, parking, etc."
+      ></textarea>
+
+    </section>
+
+    <section class="card">
+
+      <div class="notice">
+        🛡️ <b>Verification:</b>
+        After submission, this property will remain pending until the
+        RentMate verification process approves it. It will not be presented
+        as verified before approval.
+      </div>
+
+      <br>
+
+      <button
+        class="submit"
+        id="submitBtn"
+        type="submit"
+      >
+        Submit property for verification
+      </button>
+
+      <div class="result" id="result"></div>
+
+    </section>
+
+  </form>
+
+</main>
+
+<script>
+
+let latitude = null;
+let longitude = null;
+let selectedFiles = [];
+
+const $ = id => document.getElementById(id);
+
+function showResult(message,type){
+
+  const box = $("result");
+
+  box.textContent = message;
+  box.className =
+    "result show " + type;
+
+  box.scrollIntoView({
+    behavior:"smooth",
+    block:"center"
+  });
+}
+
+/* --------------------------------
+   LOCATION
+-------------------------------- */
+
+$("locationBtn").addEventListener(
+  "click",
+  function(){
+
+    if(!navigator.geolocation){
+
+      showResult(
+        "This browser does not support location.",
+        "error"
+      );
+
+      return;
+    }
+
+    $("locationBtn").disabled = true;
+    $("locationBtn").textContent =
+      "Detecting...";
+
+    $("locationStatus").textContent =
+      "Requesting location permission...";
+
+    navigator.geolocation.getCurrentPosition(
+
+      position => {
+
+        latitude =
+          position.coords.latitude;
+
+        longitude =
+          position.coords.longitude;
+
+        const accuracy =
+          Math.round(
+            position.coords.accuracy
+          );
+
+        $("locationStatus").textContent =
+          "✓ Property location detected";
+
+        $("coordinates").textContent =
+          "Latitude: " +
+          latitude.toFixed(6) +
+          " • Longitude: " +
+          longitude.toFixed(6) +
+          " • Accuracy: ~" +
+          accuracy +
+          "m";
+
+        $("locationBtn").textContent =
+          "✓ Location added";
+
+        $("locationBtn").disabled = false;
+
+      },
+
+      error => {
+
+        $("locationBtn").disabled = false;
+        $("locationBtn").textContent =
+          "Try again";
+
+        $("locationStatus").textContent =
+          "Location permission unavailable";
+
+        if(error.code === 1){
+
+          showResult(
+            "Location permission was denied. Allow location access in browser settings and try again.",
+            "error"
+          );
+
+        }else{
+
+          showResult(
+            "Unable to detect your location. Please try again.",
+            "error"
+          );
+        }
+
+      },
+
+      {
+        enableHighAccuracy:true,
+        timeout:15000,
+        maximumAge:0
+      }
+
+    );
+  }
+);
+
+
+/* --------------------------------
+   AMENITIES
+-------------------------------- */
+
+document
+.querySelectorAll(".amenity")
+.forEach(item => {
+
+  item.addEventListener(
+    "click",
+    () => item.classList.toggle("active")
+  );
+
+});
+
+
+/* --------------------------------
+   PHOTO PREVIEW
+-------------------------------- */
+
+$("photos").addEventListener(
+  "change",
+  function(){
+
+    const incoming =
+      Array.from(this.files || []);
+
+    selectedFiles =
+      [...selectedFiles,...incoming]
+      .slice(0,10);
+
+    renderPreview();
+
+    this.value = "";
+
+  }
+);
+
+function renderPreview(){
+
+  $("preview").innerHTML = "";
+
+  selectedFiles.forEach(
+    (file,index) => {
+
+      const url =
+        URL.createObjectURL(file);
+
+      const item =
+        document.createElement("div");
+
+      item.className =
+        "preview-item";
+
+      item.innerHTML = `
+        <img
+          src="${url}"
+          alt="Property photo preview"
+        >
+
+        <button
+          type="button"
+          onclick="removePhoto(${index})"
+        >
+          ×
+        </button>
+      `;
+
+      $("preview").appendChild(item);
+
+    }
+  );
+}
+
+window.removePhoto = function(index){
+
+  selectedFiles.splice(index,1);
+
+  renderPreview();
+
+};
+
+
+/* --------------------------------
+   AUTH
+-------------------------------- */
+
+function getToken(){
+
+  return localStorage.getItem(
+    "rentmate_token"
+  );
+}
+
+
+/* --------------------------------
+   SUBMIT
+-------------------------------- */
+
+$("propertyForm").addEventListener(
+  "submit",
+  async function(event){
+
+    event.preventDefault();
+
+    const token =
+      getToken();
+
+    if(!token){
+
+      showResult(
+        "Please login as an owner before adding a property.",
+        "error"
+      );
+
+      setTimeout(
+        () => {
+          window.location.href =
+            "/login.html?redirect=/owner/add-property.html";
+        },
+        1200
+      );
+
+      return;
+    }
+
+    if(
+      latitude === null ||
+      longitude === null
+    ){
+
+      showResult(
+        "Please allow location and add the actual property location.",
+        "error"
+      );
+
+      return;
+    }
+
+    const amenities =
+      Array.from(
+        document.querySelectorAll(
+          ".amenity.active"
+        )
+      )
+      .map(
+        item => item.dataset.value
+      );
+
+    const formData =
+      new FormData();
+
+    formData.append(
+      "title",
+      $("title").value.trim()
+    );
+
+    formData.append(
+      "property_type",
+      $("property_type").value
+    );
+
+    formData.append(
+      "bhk",
+      $("bhk").value
+    );
+
+    formData.append(
+      "rent",
+      $("rent").value
+    );
+
+    formData.append(
+      "deposit",
+      $("deposit").value || 0
+    );
+
+    formData.append(
+      "area",
+      $("area").value.trim()
+    );
+
+    formData.append(
+      "city",
+      $("city").value.trim()
+    );
+
+    formData.append(
+      "state",
+      $("state").value.trim()
+    );
+
+    formData.append(
+      "area_sqft",
+      $("area_sqft").value || ""
+    );
+
+    formData.append(
+      "furnishing",
+      $("furnishing").value
+    );
+
+    formData.append(
+      "available_from",
+      $("available_from").value
+    );
+
+    formData.append(
+      "latitude",
+      latitude
+    );
+
+    formData.append(
+      "longitude",
+      longitude
+    );
+
+    formData.append(
+      "description",
+      $("description").value.trim()
+    );
+
+    formData.append(
+      "amenities",
+      JSON.stringify(amenities)
+    );
+
+    selectedFiles.forEach(
+      file => {
+
+        formData.append(
+          "images",
+          file
+        );
+
+      }
+    );
+
+    const button =
+      $("submitBtn");
+
+    button.disabled = true;
+    button.textContent =
+      "Submitting...";
+
+    try{
+
+      const response =
+        await fetch(
+          "/api/properties",
+          {
+            method:"POST",
+
+            headers:{
+              "Authorization":
+                "Bearer " + token
+            },
+
+            body:formData
+          }
+        );
+
+      const data =
+        await response.json();
+
+      if(!response.ok || !data.success){
+
+        throw new Error(
+          data.error ||
+          "Unable to create property"
+        );
+
+      }
+
+      showResult(
+        "✓ Property submitted successfully. It is now pending verification.",
+        "success"
+      );
+
+      $("propertyForm").reset();
+
+      latitude = null;
+      longitude = null;
+      selectedFiles = [];
+
+      renderPreview();
+
+      $("locationStatus").textContent =
+        "Location not selected";
+
+      $("coordinates").textContent =
+        "Latitude / longitude will appear here after permission is granted.";
+
+      document
+      .querySelectorAll(".amenity.active")
+      .forEach(
+        item =>
+          item.classList.remove("active")
+      );
+
+    }catch(error){
+
+      console.error(error);
+
+      showResult(
+        error.message ||
+        "Unable to submit property.",
+        "error"
+      );
+
+    }finally{
+
+      button.disabled = false;
+
+      button.textContent =
+        "Submit property for verification";
+
+    }
+
+  }
+);
+
+</script>
+
+<script src="/js/rentmate-premium.js" defer></script>
+<script src="/js/rentmate-guidance.js" defer></script>
+<script src="/js/rentmate-location-direct.js" defer></script>
+<script src="/js/rentmate-student.js" defer></script>
+<script src="/js/rentmate-app.js" defer></script>
+<script src="/js/rentmate-final.js"></script>
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

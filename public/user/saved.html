@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+<meta charset="utf-8">
+
+<meta
+  name="viewport"
+  content="width=device-width,initial-scale=1">
+
+<title>Saved Properties — RentMate</title>
+
+<link rel="stylesheet" href="/css/rentmate-app.css">
+
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<main class="rm-container">
+
+  <section class="rm-section">
+
+    <div class="rm-section-title">
+
+      <div>
+        <h2>Saved Properties</h2>
+        <p>Your favourite rental properties.</p>
+      </div>
+
+    </div>
+
+    <div
+      id="savedProperties"
+      class="rm-property-grid">
+
+      <div class="rm-state">
+
+        <div>
+
+          <div class="rm-state-icon">♡</div>
+
+          <h3>No saved properties yet</h3>
+
+          <p>
+            Save a property you like and it will appear here.
+          </p>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+</main>
+
+<script src="/js/rentmate-app.js" defer></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded",async()=>{
+
+  const token=
+    localStorage.getItem("rentmate_token");
+
+  const box=
+    document.querySelector("#savedProperties");
+
+  if(!token){
+    box.innerHTML=`
+      <div class="rm-state">
+        <div>
+          <div class="rm-state-icon">🔐</div>
+          <h3>Login to view saved properties</h3>
+          <p>
+            Your saved properties are linked to your account.
+          </p>
+          <a
+            href="/login.html?redirect=/user/saved.html"
+            class="rm-property-action"
+            style="
+              display:inline-flex;
+              width:auto;
+              padding:0 18px;
+              align-items:center;
+              justify-content:center;
+              text-decoration:none;
+              margin-top:14px;
+            ">
+            Login
+          </a>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  try{
+
+    const res=await fetch(
+      "/api/favorites",
+      {
+        headers:{
+          Authorization:`Bearer ${token}`
+        }
+      }
+    );
+
+    const data=await res.json();
+
+    if(!res.ok){
+      throw new Error(
+        data.error || "Unable to load saved properties"
+      );
+    }
+
+    const favs=Array.isArray(data.favorites)
+      ? data.favorites
+      : [];
+
+    if(!favs.length){
+
+      box.innerHTML=`
+        <div class="rm-state">
+          <div>
+            <div class="rm-state-icon">♡</div>
+            <h3>No saved properties yet</h3>
+            <p>
+              Browse real listings and save the ones you like.
+            </p>
+          </div>
+        </div>
+      `;
+
+      return;
+    }
+
+    const cards=[];
+
+    for(const fav of favs){
+
+      try{
+
+        const r=await fetch(
+          "/api/properties/"+encodeURIComponent(
+            fav.property_id
+          )
+        );
+
+        if(!r.ok) continue;
+
+        const d=await r.json();
+
+        if(!d.success || !d.property) continue;
+
+        const p=d.property;
+
+        const image=
+          Array.isArray(p.images) &&
+          p.images.length
+            ? p.images[0]
+            : "";
+
+        cards.push(`
+          <article class="rm-property-card">
+
+            <div class="rm-property-image">
+
+              ${
+                image
+                ? `<img
+                    src="${image}"
+                    alt="${escapeHtml(p.title)}"
+                    loading="lazy">`
+                : `<div
+                    style="
+                      height:100%;
+                      display:grid;
+                      place-items:center;
+                      color:#98a2b3;">
+                    No photos
+                  </div>`
+              }
+
+            </div>
+
+            <div class="rm-property-body">
+
+              <h3 class="rm-property-title">
+                ${escapeHtml(p.title)}
+              </h3>
+
+              <div class="rm-property-location">
+                📍 ${escapeHtml(
+                  [p.area,p.city]
+                    .filter(Boolean)
+                    .join(", ")
+                )}
+              </div>
+
+              <div class="rm-property-price">
+                ₹${Number(p.rent||0).toLocaleString("en-IN")}
+                <small>/ month</small>
+              </div>
+
+              <div class="rm-property-meta">
+
+                ${p.property_type
+                  ? `<span class="rm-meta">
+                      ${escapeHtml(p.property_type)}
+                    </span>`
+                  : ""}
+
+                ${p.bhk
+                  ? `<span class="rm-meta">
+                      ${escapeHtml(p.bhk)}
+                    </span>`
+                  : ""}
+
+              </div>
+
+              <button
+                class="rm-property-action"
+                onclick="
+                  location.href='/property.html?id=${encodeURIComponent(p.id)}'
+                ">
+                View Property
+              </button>
+
+            </div>
+
+          </article>
+        `);
+
+      }catch{}
+
+    }
+
+    box.innerHTML=cards.length
+      ? cards.join("")
+      : `
+        <div class="rm-state">
+          <div>
+            <div class="rm-state-icon">♡</div>
+            <h3>No available saved properties</h3>
+            <p>
+              Saved properties that are no longer public
+              are not shown.
+            </p>
+          </div>
+        </div>
+      `;
+
+  }catch(error){
+
+    box.innerHTML=`
+      <div class="rm-state">
+        <div>
+          <div class="rm-state-icon">⚠️</div>
+          <h3>Could not load saved properties</h3>
+          <p>
+            Please check your connection and try again.
+          </p>
+        </div>
+      </div>
+    `;
+
+  }
+
+});
+
+
+function escapeHtml(value){
+
+  return String(value ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+
+}
+
+</script>
+
+<script src="/js/rentmate-final.js"></script>
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Owner Dashboard — RentMate</title>
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<div class="rm-layout">
+
+<aside class="rm-sidebar">
+
+<div class="rm-brand">
+  <div class="rm-logo">R</div>
+  RentMate
+</div>
+
+<nav class="rm-nav">
+  <a class="active" href="/owner/dashboard.html">🏠 Dashboard</a>
+  <a href="/owner/add-property.html">➕ Add Property</a>
+  <a href="/owner/my-properties.html">🏡 My Properties</a>
+  <a href="/owner/enquiries.html">📩 Enquiries</a>
+</nav>
+
+<div class="rm-sidebar-bottom">
+  <a class="rm-nav" href="/">
+    <a href="/">🌐 Visit Website</a>
+  </a>
+  <a class="rm-nav" href="#" onclick="logout()">↪ Logout</a>
+</div>
+
+</aside>
+
+<main class="rm-main">
+
+<header class="rm-topbar">
+  <div class="rm-topbar-title">Owner Dashboard</div>
+
+  <div class="rm-user">
+    <div class="rm-avatar">O</div>
+    <span>Owner</span>
+  </div>
+</header>
+
+<div class="rm-content">
+
+<div class="rm-welcome">
+  <div>
+    <h1>Manage your rentals</h1>
+    <div class="rm-muted">
+      Everything related to your properties in one place.
+    </div>
+  </div>
+
+  <button class="rm-btn rm-btn-primary"
+    onclick="location.href='/owner/add-property.html'">
+    + Add Property
+  </button>
+</div>
+
+<div class="rm-grid rm-grid-4">
+
+  <div class="rm-card rm-stat">
+    <div class="rm-stat-label">Total Properties</div>
+    <div class="rm-stat-value" id="total">—</div>
+  </div>
+
+  <div class="rm-card rm-stat">
+    <div class="rm-stat-label">Pending Verification</div>
+    <div class="rm-stat-value" id="pending">—</div>
+  </div>
+
+  <div class="rm-card rm-stat">
+    <div class="rm-stat-label">Approved</div>
+    <div class="rm-stat-value" id="approved">—</div>
+  </div>
+
+  <div class="rm-card rm-stat">
+    <div class="rm-stat-label">Rejected</div>
+    <div class="rm-stat-value" id="rejected">—</div>
+  </div>
+
+</div>
+
+<br>
+
+<div class="rm-card">
+
+<div class="rm-section-title">
+  <h2>Recent Properties</h2>
+  <button class="rm-btn rm-btn-secondary"
+    onclick="location.href='/owner/my-properties.html'">
+    View all
+  </button>
+</div>
+
+<div id="properties" class="rm-grid rm-grid-3">
+  <div class="rm-loading">Loading...</div>
+</div>
+
+</div>
+
+</div>
+</main>
+
+</div>
+
+<div class="rm-mobile-nav">
+<a href="/owner/dashboard.html"><span>🏠</span>Home</a>
+<a href="/owner/add-property.html"><span>➕</span>Add</a>
+<a href="/owner/my-properties.html"><span>🏡</span>Properties</a>
+<a href="/owner/enquiries.html"><span>📩</span>Enquiries</a>
+</div>
+
+<script src="/js/rentmate-final.js"></script>
+
+<script>
+
+if(!RentMateFinal.token){
+  location.href="/login.html?redirect=/owner/dashboard.html";
+}
+
+function logout(){
+  RentMateFinal.logout();
+}
+
+async function load(){
+
+  try{
+
+    const data=
+      await RentMateFinal.api("/api/owner/properties");
+
+    const list=data.properties||[];
+
+    total.textContent=list.length;
+
+    pending.textContent=
+      list.filter(x=>x.status==="PENDING").length;
+
+    approved.textContent=
+      list.filter(x=>x.status==="APPROVED").length;
+
+    rejected.textContent=
+      list.filter(x=>x.status==="REJECTED").length;
+
+    if(!list.length){
+
+      properties.innerHTML=`
+        <div class="rm-empty">
+          <div class="rm-empty-icon">🏡</div>
+          <h3>No properties yet</h3>
+          <p class="rm-muted">
+            Add your first real property to start receiving enquiries.
+          </p>
+          <button class="rm-btn rm-btn-primary"
+            onclick="location.href='/owner/add-property.html'">
+            Add Property
+          </button>
+        </div>
+      `;
+
+      return;
+    }
+
+    properties.innerHTML=list
+      .slice(0,6)
+      .map(p=>{
+
+        const img=p.images?.[0]||"";
+
+        return `
+        <article class="rm-card rm-property">
+
+          ${
+            img
+            ? `<img class="rm-property-image"
+                src="${RentMateFinal.escape(img)}">`
+            : `<div class="rm-property-image"></div>`
+          }
+
+          <div class="rm-property-body">
+
+            <h3 class="rm-property-title">
+              ${RentMateFinal.escape(p.title)}
+            </h3>
+
+            <div class="rm-property-meta">
+              ${RentMateFinal.escape(p.area||"")}
+              ${p.city?", "+RentMateFinal.escape(p.city):""}
+            </div>
+
+            <div class="rm-property-price">
+              ${RentMateFinal.money(p.rent)}
+              <small>/month</small>
+            </div>
+
+            <div class="rm-actions">
+
+              <span class="rm-status rm-status-${RentMateFinal.escape(p.status)}">
+                ${RentMateFinal.escape(p.status)}
+              </span>
+
+            </div>
+
+          </div>
+
+        </article>
+        `;
+
+      }).join("");
+
+  }catch(e){
+
+    properties.innerHTML=`
+      <div class="rm-empty">
+        <h3>Unable to load properties</h3>
+        <p class="rm-muted">
+          ${RentMateFinal.escape(e.message)}
+        </p>
+      </div>
+    `;
+  }
+}
+
+load();
+
+</script>
+
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

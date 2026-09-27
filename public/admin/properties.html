@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RentMate Admin</title>
+<link rel="stylesheet" href="/css/rentmate-app.css">
+
+<style>
+body{
+  margin:0;
+  background:#f5f7fb;
+  font-family:system-ui,sans-serif;
+}
+.wrap{
+  max-width:1100px;
+  margin:auto;
+  padding:30px 18px;
+}
+.top{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:15px;
+  margin-bottom:25px;
+}
+.card{
+  background:white;
+  border-radius:20px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 10px 30px #0000000b;
+}
+.property{
+  display:grid;
+  grid-template-columns:180px 1fr auto;
+  gap:18px;
+  align-items:center;
+}
+.property img{
+  width:180px;
+  height:130px;
+  object-fit:cover;
+  border-radius:15px;
+  background:#eee;
+}
+.actions{
+  display:flex;
+  gap:8px;
+  flex-wrap:wrap;
+}
+button{
+  border:0;
+  border-radius:12px;
+  padding:11px 15px;
+  cursor:pointer;
+  font-weight:700;
+}
+.approve{background:#111827;color:white}
+.reject{background:#fee2e2;color:#991b1b}
+.muted{color:#667085}
+.empty{
+  text-align:center;
+  padding:50px 20px;
+}
+@media(max-width:700px){
+  .property{
+    grid-template-columns:1fr;
+  }
+  .property img{
+    width:100%;
+    height:190px;
+  }
+}
+</style>
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<div class="wrap">
+
+<div class="top">
+  <div>
+    <h1>RentMate Admin</h1>
+    <div class="muted">Property verification center</div>
+  </div>
+  <button onclick="location.href='/'">Home</button>
+</div>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+
+const token=localStorage.getItem("rentmate_token");
+
+if(!token){
+  location.href="/login.html?redirect=/admin/properties.html";
+}
+
+async function load(){
+
+  const box=document.getElementById("list");
+
+  box.innerHTML=
+    '<div class="card empty">Loading real properties...</div>';
+
+  try{
+
+    const r=await fetch(
+      "/api/admin/properties/pending",
+      {
+        headers:{
+          Authorization:"Bearer "+token
+        }
+      }
+    );
+
+    const data=await r.json();
+
+    if(!r.ok){
+      throw new Error(data.error||"Access denied");
+    }
+
+    const properties=data.properties||[];
+
+    if(!properties.length){
+
+      box.innerHTML=`
+        <div class="card empty">
+          <h2>No pending properties</h2>
+          <p class="muted">
+            New owner listings will appear here after submission.
+          </p>
+        </div>
+      `;
+
+      return;
+    }
+
+    box.innerHTML=properties.map(p=>{
+
+      const img=p.images?.[0] || "";
+
+      return `
+      <div class="card">
+        <div class="property">
+
+          ${
+            img
+            ? `<img src="${img}" alt="">`
+            : `<div style="height:130px;border-radius:15px;background:#eef1f5;display:grid;place-items:center">No photo</div>`
+          }
+
+          <div>
+            <h2>${escapeHtml(p.title)}</h2>
+
+            <div class="muted">
+              ${escapeHtml(p.area||"")}
+              ${p.city ? ", "+escapeHtml(p.city) : ""}
+            </div>
+
+            <p>
+              <b>₹${Number(p.rent||0).toLocaleString("en-IN")}/month</b>
+              · ${escapeHtml(p.property_type||"")}
+              · ${escapeHtml(p.bhk||"")}
+            </p>
+
+            <small class="muted">
+              Submitted ${new Date(p.created_at).toLocaleString()}
+            </small>
+          </div>
+
+          <div class="actions">
+            <button class="approve"
+              onclick="updateStatus('${p.id}','APPROVED')">
+              Approve
+            </button>
+
+            <button class="reject"
+              onclick="rejectProperty('${p.id}')">
+              Reject
+            </button>
+          </div>
+
+        </div>
+      </div>
+      `;
+
+    }).join("");
+
+  }catch(e){
+
+    box.innerHTML=`
+      <div class="card empty">
+        <h2>Unable to load</h2>
+        <p>${escapeHtml(e.message)}</p>
+      </div>
+    `;
+  }
+}
+
+async function updateStatus(id,status,reason=""){
+
+  const r=await fetch(
+    "/api/admin/properties/"+id+"/status",
+    {
+      method:"PATCH",
+      headers:{
+        "Content-Type":"application/json",
+        Authorization:"Bearer "+token
+      },
+      body:JSON.stringify({status,reason})
+    }
+  );
+
+  const data=await r.json();
+
+  if(!r.ok){
+    alert(data.error||"Update failed");
+    return;
+  }
+
+  load();
+}
+
+function rejectProperty(id){
+
+  const reason=prompt(
+    "Reason for rejecting this property:"
+  );
+
+  if(reason===null) return;
+
+  updateStatus(id,"REJECTED",reason);
+}
+
+function escapeHtml(v){
+  return String(v||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+load();
+
+</script>
+
+<script src="/js/rentmate-final.js"></script>
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

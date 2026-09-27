@@ -1,0 +1,170 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Users — RentMate Admin</title>
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<div class="rm-layout">
+
+<aside class="rm-sidebar">
+
+<div class="rm-brand">
+<div class="rm-logo">R</div>
+RentMate
+</div>
+
+<nav class="rm-nav">
+<a href="/admin/dashboard.html">📊 Dashboard</a>
+<a href="/admin/properties.html">🛡️ Verification</a>
+<a class="active" href="/admin/users.html">👥 Users</a>
+<a href="/admin/reports.html">📈 Reports</a>
+</nav>
+
+</aside>
+
+<main class="rm-main">
+
+<header class="rm-topbar">
+<div class="rm-topbar-title">Users</div>
+</header>
+
+<div class="rm-content">
+
+<div class="rm-welcome">
+<div>
+<h1>Platform users</h1>
+<div class="rm-muted">
+Actual registered users only.
+</div>
+</div>
+</div>
+
+<div class="rm-card">
+<div id="box" class="rm-loading">
+Loading...
+</div>
+</div>
+
+</div>
+
+</main>
+</div>
+
+<script src="/js/rentmate-final.js"></script>
+
+<script>
+
+if(!RentMateFinal.token){
+ location.href="/login.html?redirect=/admin/users.html";
+}
+
+async function load(){
+
+ try{
+
+  const data=
+    await RentMateFinal.api(
+      "/api/admin/users"
+    );
+
+  const users=data.users||[];
+
+  if(!users.length){
+
+    box.innerHTML=`
+      <div class="rm-empty">
+      <div class="rm-empty-icon">👥</div>
+      <h3>No registered users</h3>
+      <p class="rm-muted">
+      Users will appear after registration.
+      </p>
+      </div>
+    `;
+
+    return;
+  }
+
+  box.innerHTML=`
+  <div class="rm-table-wrap">
+  <table class="rm-table">
+
+  <thead>
+  <tr>
+  <th>Name</th>
+  <th>Email</th>
+  <th>Phone</th>
+  <th>Role</th>
+  <th>Created</th>
+  </tr>
+  </thead>
+
+  <tbody>
+
+  ${users.map(u=>`
+
+  <tr>
+
+  <td>${esc(
+    u.name||u.fullName||"—"
+  )}</td>
+
+  <td>${esc(
+    u.email||"—"
+  )}</td>
+
+  <td>${esc(
+    u.phone||"—"
+  )}</td>
+
+  <td>
+  <span class="rm-status">
+  ${esc(u.role||u.userRole||"USER")}
+  </span>
+  </td>
+
+  <td>
+  ${u.created_at
+    ? new Date(u.created_at).toLocaleDateString()
+    : "—"}
+  </td>
+
+  </tr>
+
+  `).join("")}
+
+  </tbody>
+  </table>
+  </div>
+  `;
+
+ }catch(e){
+
+  box.innerHTML=`
+  <div class="rm-empty">
+  <h3>Unable to load users</h3>
+  <p>${esc(e.message)}</p>
+  </div>`;
+ }
+}
+
+function esc(v){
+ return RentMateFinal.escape(v);
+}
+
+load();
+
+</script>
+
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

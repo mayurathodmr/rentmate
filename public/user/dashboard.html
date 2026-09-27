@@ -1,0 +1,356 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RentMate — Find your rental</title>
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<div class="rm-layout">
+
+<aside class="rm-sidebar">
+
+<div class="rm-brand">
+<div class="rm-logo">R</div>
+RentMate
+</div>
+
+<nav class="rm-nav">
+<a class="active" href="/user/dashboard.html">🔎 Search</a>
+<a href="/user/saved.html">❤️ Saved</a>
+<a href="/user/requests.html">📩 Enquiries</a>
+</nav>
+
+<div class="rm-sidebar-bottom">
+<a href="/">🌐 Website</a>
+<a href="#" onclick="logout()">↪ Logout</a>
+</div>
+
+</aside>
+
+<main class="rm-main">
+
+<header class="rm-topbar">
+<div class="rm-topbar-title">Find a Rental</div>
+<div class="rm-user">
+<div class="rm-avatar">U</div>
+<span>Student</span>
+</div>
+</header>
+
+<div class="rm-content">
+
+<div class="rm-welcome">
+<div>
+<h1>Find your next place</h1>
+<div class="rm-muted">
+Search real approved properties on RentMate.
+</div>
+</div>
+</div>
+
+<div class="rm-card">
+
+<div class="rm-grid rm-grid-2">
+
+<div class="rm-field">
+<label>City / Area / College</label>
+<input class="rm-input" id="city"
+placeholder="e.g. your area or college">
+</div>
+
+<div class="rm-field">
+<label>Property Type</label>
+<select class="rm-select" id="type">
+<option value="">Any type</option>
+<option>Room</option>
+<option>1 RK</option>
+<option>Flat</option>
+<option>Apartment</option>
+<option>House</option>
+<option>PG</option>
+<option>Hostel</option>
+<option>Villa</option>
+</select>
+</div>
+
+<div class="rm-field">
+<label>BHK</label>
+<select class="rm-select" id="bhk">
+<option value="">Any BHK</option>
+<option>1 RK</option>
+<option>1 BHK</option>
+<option>2 BHK</option>
+<option>3 BHK</option>
+<option>4 BHK</option>
+</select>
+</div>
+
+<div class="rm-field">
+<label>Maximum Monthly Rent</label>
+<input class="rm-input"
+id="maxRent"
+type="number"
+placeholder="₹ maximum">
+</div>
+
+</div>
+
+<div class="rm-actions">
+<button class="rm-btn rm-btn-primary"
+onclick="search()">
+🔎 Search Rentals
+</button>
+
+<button class="rm-btn rm-btn-secondary"
+onclick="nearMe()">
+📍 Near Me
+</button>
+</div>
+
+</div>
+
+<br>
+
+<div class="rm-section-title">
+<h2>Available Properties</h2>
+<span class="rm-muted" id="count"></span>
+</div>
+
+<div id="results"
+class="rm-grid rm-grid-3">
+<div class="rm-loading">Loading real listings...</div>
+</div>
+
+</div>
+</main>
+</div>
+
+<div class="rm-mobile-nav">
+<a href="/user/dashboard.html"><span>🔎</span>Search</a>
+<a href="/user/saved.html"><span>❤️</span>Saved</a>
+<a href="/user/requests.html"><span>📩</span>Enquiries</a>
+<a href="/"><span>🏠</span>Home</a>
+</div>
+
+<script src="/js/rentmate-final.js"></script>
+
+<script>
+
+const params=new URLSearchParams(location.search);
+
+city.value=params.get("city")||"";
+type.value=params.get("type")||"";
+bhk.value=params.get("bhk")||"";
+maxRent.value=params.get("maxRent")||"";
+
+function logout(){
+ RentMateFinal.logout();
+}
+
+async function search(){
+
+ const q=new URLSearchParams();
+
+ if(city.value.trim())
+   q.set("city",city.value.trim());
+
+ if(type.value)
+   q.set("type",type.value);
+
+ if(bhk.value)
+   q.set("bhk",bhk.value);
+
+ if(maxRent.value)
+   q.set("maxRent",maxRent.value);
+
+ const box=document.getElementById("results");
+
+ box.innerHTML=
+   '<div class="rm-loading">Searching...</div>';
+
+ try{
+
+   const data=
+     await RentMateFinal.api(
+       "/api/properties?limit=100&"+q.toString()
+     );
+
+   render(data.properties||[]);
+
+ }catch(e){
+
+   box.innerHTML=`
+   <div class="rm-card rm-empty">
+     <h3>Unable to load properties</h3>
+     <p class="rm-muted">
+       ${RentMateFinal.escape(e.message)}
+     </p>
+   </div>`;
+ }
+}
+
+function render(list){
+
+ count.textContent=
+   list.length+" real listing"+
+   (list.length===1?"":"s");
+
+ if(!list.length){
+
+   results.innerHTML=`
+   <div class="rm-card rm-empty">
+     <div class="rm-empty-icon">🏠</div>
+     <h3>No approved properties found</h3>
+     <p class="rm-muted">
+       Try another area, property type or rent range.
+     </p>
+   </div>`;
+
+   return;
+ }
+
+ results.innerHTML=list.map(p=>{
+
+   const img=p.images?.[0]||"";
+
+   return `
+   <article class="rm-card rm-property">
+
+   ${
+    img
+    ? `<img class="rm-property-image"
+       src="${RentMateFinal.escape(img)}">`
+    : `<div class="rm-property-image"></div>`
+   }
+
+   <div class="rm-property-body">
+
+   <h3 class="rm-property-title">
+     ${RentMateFinal.escape(p.title)}
+   </h3>
+
+   <div class="rm-property-meta">
+     📍 ${RentMateFinal.escape(p.area||"")}
+     ${p.city?", "+RentMateFinal.escape(p.city):""}
+   </div>
+
+   <div class="rm-property-price">
+     ${RentMateFinal.money(p.rent)}
+     <small>/month</small>
+   </div>
+
+   <div class="rm-property-meta">
+     ${RentMateFinal.escape(p.property_type||"")}
+     ${p.bhk?" · "+RentMateFinal.escape(p.bhk):""}
+     ${p.furnishing?" · "+RentMateFinal.escape(p.furnishing):""}
+   </div>
+
+   <div class="rm-actions">
+
+   <button class="rm-btn rm-btn-primary"
+   onclick="event.stopPropagation();openProperty('${p.id}')">
+   View Property
+   </button>
+
+   <button class="rm-btn rm-btn-secondary"
+   onclick="event.stopPropagation();save('${p.id}')">
+   ❤️ Save
+   </button>
+
+   </div>
+
+   </div>
+   </article>
+   `;
+
+ }).join("");
+}
+
+function openProperty(id){
+ location.href=
+   "/property.html?id="+encodeURIComponent(id);
+}
+
+async function save(id){
+
+ try{
+
+   await RentMateFinal.api(
+     "/api/favorites/"+id,
+     {method:"POST"}
+   );
+
+   alert("Property saved.");
+
+ }catch(e){
+
+   alert(e.message);
+ }
+}
+
+function nearMe(){
+
+ if(window.RentMateDirectLocation){
+
+   window.RentMateDirectLocation.request();
+
+ }else{
+
+   if(!navigator.geolocation){
+     alert("Location is not supported.");
+     return;
+   }
+
+   navigator.geolocation.getCurrentPosition(
+     async pos=>{
+
+       const q=
+         new URLSearchParams({
+           latitude:pos.coords.latitude,
+           longitude:pos.coords.longitude,
+           radius:"10",
+           limit:"100"
+         });
+
+       try{
+
+         const data=
+           await RentMateFinal.api(
+             "/api/properties?"+q.toString()
+           );
+
+         render(data.properties||[]);
+
+       }catch(e){
+         alert(e.message);
+       }
+
+     },
+     ()=>{
+       alert("Please allow location access to find nearby rentals.");
+     },
+     {
+       enableHighAccuracy:true,
+       timeout:10000,
+       maximumAge:30000
+     }
+   );
+ }
+}
+
+search();
+
+</script>
+
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

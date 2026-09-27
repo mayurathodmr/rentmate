@@ -1,0 +1,124 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Reports — RentMate Admin</title>
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<div class="rm-layout">
+
+<aside class="rm-sidebar">
+
+<div class="rm-brand">
+<div class="rm-logo">R</div>
+RentMate
+</div>
+
+<nav class="rm-nav">
+<a href="/admin/dashboard.html">📊 Dashboard</a>
+<a href="/admin/properties.html">🛡️ Verification</a>
+<a href="/admin/users.html">👥 Users</a>
+<a class="active" href="/admin/reports.html">📈 Reports</a>
+</nav>
+
+</aside>
+
+<main class="rm-main">
+
+<header class="rm-topbar">
+<div class="rm-topbar-title">Reports</div>
+</header>
+
+<div class="rm-content">
+
+<div class="rm-welcome">
+<div>
+<h1>Platform overview</h1>
+<div class="rm-muted">
+Numbers below come directly from RentMate data.
+</div>
+</div>
+</div>
+
+<div id="cards"
+class="rm-grid rm-grid-4">
+<div class="rm-loading">Loading...</div>
+</div>
+
+</div>
+
+</main>
+</div>
+
+<script src="/js/rentmate-final.js"></script>
+
+<script>
+
+if(!RentMateFinal.token){
+ location.href="/login.html?redirect=/admin/reports.html";
+}
+
+async function load(){
+
+ try{
+
+  const data=
+    await RentMateFinal.api(
+      "/api/admin/reports"
+    );
+
+  const x=data.reports||{};
+
+  const items=[
+    ["Users",x.users],
+    ["Properties",x.properties],
+    ["Approved",x.approved],
+    ["Pending",x.pending],
+    ["Rejected",x.rejected],
+    ["Enquiries",x.enquiries]
+  ];
+
+  cards.innerHTML=items.map(
+    ([label,value])=>`
+
+    <div class="rm-card rm-stat">
+
+      <div class="rm-stat-label">
+      ${label}
+      </div>
+
+      <div class="rm-stat-value">
+      ${Number(value||0).toLocaleString("en-IN")}
+      </div>
+
+    </div>
+
+    `
+  ).join("");
+
+ }catch(e){
+
+  cards.innerHTML=`
+  <div class="rm-card rm-empty">
+  <h3>Unable to load reports</h3>
+  <p>${RentMateFinal.escape(e.message)}</p>
+  </div>`;
+ }
+}
+
+load();
+
+</script>
+
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

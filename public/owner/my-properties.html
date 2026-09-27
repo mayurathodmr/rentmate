@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>My Properties — RentMate</title>
+<link rel="stylesheet" href="/css/rentmate-app.css">
+
+<style>
+body{
+  margin:0;
+  background:#f6f8fb;
+  font-family:system-ui,sans-serif;
+}
+.wrap{
+  max-width:1050px;
+  margin:auto;
+  padding:30px 18px;
+}
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:24px;
+}
+.card{
+  background:white;
+  border-radius:20px;
+  padding:18px;
+  margin-bottom:15px;
+  box-shadow:0 10px 30px #0000000b;
+}
+.item{
+  display:grid;
+  grid-template-columns:170px 1fr auto;
+  gap:18px;
+  align-items:center;
+}
+.item img{
+  width:170px;
+  height:120px;
+  border-radius:15px;
+  object-fit:cover;
+}
+.status{
+  display:inline-block;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#eef2ff;
+  font-size:12px;
+  font-weight:800;
+}
+button{
+  border:0;
+  padding:10px 14px;
+  border-radius:11px;
+  cursor:pointer;
+  font-weight:700;
+}
+.delete{
+  background:#fee2e2;
+  color:#991b1b;
+}
+.muted{color:#667085}
+@media(max-width:700px){
+  .item{grid-template-columns:1fr}
+  .item img{width:100%;height:190px}
+}
+</style>
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<div class="wrap">
+
+<div class="header">
+  <div>
+    <h1>My Properties</h1>
+    <p class="muted">
+      Manage properties you actually submitted.
+    </p>
+  </div>
+
+  <button onclick="location.href='/owner/add-property.html'">
+    + Add Property
+  </button>
+</div>
+
+<div id="list"></div>
+
+</div>
+
+<script>
+
+const token=localStorage.getItem("rentmate_token");
+
+if(!token){
+  location.href="/login.html?redirect=/owner/my-properties.html";
+}
+
+async function load(){
+
+  const box=document.getElementById("list");
+
+  try{
+
+    const r=await fetch(
+      "/api/owner/properties",
+      {
+        headers:{
+          Authorization:"Bearer "+token
+        }
+      }
+    );
+
+    const data=await r.json();
+
+    if(!r.ok){
+      throw new Error(data.error||"Unable to load");
+    }
+
+    const properties=data.properties||[];
+
+    if(!properties.length){
+
+      box.innerHTML=`
+        <div class="card">
+          <h2>No properties yet</h2>
+          <p class="muted">
+            Add your first real property to RentMate.
+          </p>
+        </div>
+      `;
+
+      return;
+    }
+
+    box.innerHTML=properties.map(p=>{
+
+      const status=p.status||"PENDING";
+      const img=p.images?.[0]||"";
+
+      return `
+      <div class="card">
+
+        <div class="item">
+
+          ${
+            img
+            ? `<img src="${img}" alt="">`
+            : `<div style="height:120px;background:#eee;border-radius:15px;display:grid;place-items:center">
+                 No photo
+               </div>`
+          }
+
+          <div>
+            <h2>${esc(p.title)}</h2>
+
+            <div class="muted">
+              ${esc(p.area||"")}
+              ${p.city ? ", "+esc(p.city):""}
+            </div>
+
+            <p>
+              <b>₹${Number(p.rent||0).toLocaleString("en-IN")}</b>/month
+            </p>
+
+            <span class="status">${esc(status)}</span>
+
+            ${
+              status==="REJECTED" && p.rejection_reason
+              ? `<p style="color:#991b1b">
+                   ${esc(p.rejection_reason)}
+                 </p>`
+              :""
+            }
+
+          </div>
+
+          <div>
+            <button class="delete"
+              onclick="removeProperty('${p.id}')">
+              Delete
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+      `;
+
+    }).join("");
+
+  }catch(e){
+
+    box.innerHTML=`
+      <div class="card">
+        <h2>Error</h2>
+        <p>${esc(e.message)}</p>
+      </div>
+    `;
+  }
+}
+
+async function removeProperty(id){
+
+  if(!confirm("Delete this property?")) return;
+
+  const r=await fetch(
+    "/api/owner/properties/"+id,
+    {
+      method:"DELETE",
+      headers:{
+        Authorization:"Bearer "+token
+      }
+    }
+  );
+
+  const data=await r.json();
+
+  if(!r.ok){
+    alert(data.error||"Delete failed");
+    return;
+  }
+
+  load();
+}
+
+function esc(v){
+  return String(v||"")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+load();
+
+</script>
+
+<script src="/js/rentmate-final.js"></script>
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

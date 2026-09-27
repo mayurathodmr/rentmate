@@ -1,0 +1,281 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Property — RentMate</title>
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<main class="rm-content">
+
+<div id="app">
+<div class="rm-loading">Loading property...</div>
+</div>
+
+</main>
+
+<script src="/js/rentmate-final.js"></script>
+
+<script>
+
+const id=
+ new URLSearchParams(location.search).get("id");
+
+if(!id){
+
+ app.innerHTML=`
+ <div class="rm-card rm-empty">
+   <h2>Property not found</h2>
+   <a href="/">Go Home</a>
+ </div>`;
+}else{
+
+ load();
+}
+
+async function load(){
+
+ try{
+
+   const data=
+     await RentMateFinal.api(
+       "/api/properties/"+encodeURIComponent(id)
+     );
+
+   const p=data.property;
+
+   if(!p){
+
+     throw new Error("Property not available.");
+   }
+
+   const images=p.images||[];
+
+   app.innerHTML=`
+
+   <div class="rm-welcome">
+
+   <div>
+   <button class="rm-btn rm-btn-secondary"
+   onclick="history.back()">
+   ← Back
+   </button>
+   </div>
+
+   <button class="rm-btn rm-btn-secondary"
+   onclick="save()">
+   ❤️ Save
+   </button>
+
+   </div>
+
+   <div class="rm-card">
+
+   ${
+    images.length
+    ? `<div class="rm-grid rm-grid-2">
+       ${images.map(src=>`
+       <img
+       src="${RentMateFinal.escape(src)}"
+       style="
+       width:100%;
+       height:300px;
+       object-fit:cover;
+       border-radius:18px">
+       `).join("")}
+       </div>`
+    : `<div class="rm-empty">
+         <div class="rm-empty-icon">🏠</div>
+         <p>No property photos uploaded.</p>
+       </div>`
+   }
+
+   <br>
+
+   <h1>
+     ${RentMateFinal.escape(p.title)}
+   </h1>
+
+   <p class="rm-muted">
+     📍 ${RentMateFinal.escape(p.area||"")}
+     ${p.city?", "+RentMateFinal.escape(p.city):""}
+     ${p.state?", "+RentMateFinal.escape(p.state):""}
+   </p>
+
+   <div class="rm-property-price">
+     ${RentMateFinal.money(p.rent)}
+     <small>/month</small>
+   </div>
+
+   <div class="rm-grid rm-grid-4" style="margin-top:20px">
+
+   <div class="rm-card">
+   <b>Type</b>
+   <p>${RentMateFinal.escape(p.property_type||"—")}</p>
+   </div>
+
+   <div class="rm-card">
+   <b>BHK</b>
+   <p>${RentMateFinal.escape(p.bhk||"—")}</p>
+   </div>
+
+   <div class="rm-card">
+   <b>Area</b>
+   <p>${RentMateFinal.escape(p.area_sqft||"—")} sqft</p>
+   </div>
+
+   <div class="rm-card">
+   <b>Furnishing</b>
+   <p>${RentMateFinal.escape(p.furnishing||"—")}</p>
+   </div>
+
+   </div>
+
+   <br>
+
+   <div class="rm-grid rm-grid-2">
+
+   <div>
+   <h2>Description</h2>
+   <p class="rm-muted">
+   ${RentMateFinal.escape(
+     p.description||"No description provided."
+   )}
+   </p>
+
+   <h2>Amenities</h2>
+
+   <div class="rm-actions">
+   ${
+     (p.amenities||[]).map(a=>
+       `<span class="rm-status">${RentMateFinal.escape(a)}</span>`
+     ).join("") ||
+     `<span class="rm-muted">No amenities listed.</span>`
+   }
+   </div>
+   </div>
+
+   <div class="rm-card">
+
+   <h2>Interested?</h2>
+
+   <p class="rm-muted">
+   Send a real enquiry to the property owner.
+   </p>
+
+   <textarea
+   id="message"
+   class="rm-textarea"
+   placeholder="Write your message..."></textarea>
+
+   <br>
+
+   <button class="rm-btn rm-btn-primary"
+   onclick="enquire()">
+   Send Enquiry
+   </button>
+
+   </div>
+
+   </div>
+
+   </div>
+   `;
+
+ }catch(e){
+
+   app.innerHTML=`
+   <div class="rm-card rm-empty">
+     <div class="rm-empty-icon">🏠</div>
+     <h2>Property unavailable</h2>
+     <p class="rm-muted">
+       ${RentMateFinal.escape(e.message)}
+     </p>
+     <button class="rm-btn rm-btn-primary"
+       onclick="location.href='/'">
+       Back to RentMate
+     </button>
+   </div>`;
+ }
+}
+
+async function save(){
+
+ try{
+
+   await RentMateFinal.api(
+     "/api/favorites/"+id,
+     {method:"POST"}
+   );
+
+   alert("Property saved.");
+
+ }catch(e){
+
+   if(!RentMateFinal.token){
+     location.href=
+       "/login.html?redirect="+
+       encodeURIComponent(location.pathname+location.search);
+     return;
+   }
+
+   alert(e.message);
+ }
+}
+
+async function enquire(){
+
+ if(!RentMateFinal.token){
+
+   location.href=
+     "/login.html?redirect="+
+     encodeURIComponent(location.pathname+location.search);
+
+   return;
+ }
+
+ const message=
+   document.getElementById("message").value.trim();
+
+ if(!message){
+
+   alert("Please write a message.");
+   return;
+ }
+
+ try{
+
+   await RentMateFinal.api(
+     "/api/enquiries",
+     {
+       method:"POST",
+       body:JSON.stringify({
+         property_id:id,
+         message
+       })
+     }
+   );
+
+   alert("Enquiry sent successfully.");
+
+   document.getElementById("message").value="";
+
+ }catch(e){
+
+   alert(e.message);
+ }
+}
+
+</script>
+
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

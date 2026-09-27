@@ -1,0 +1,262 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin Dashboard — RentMate</title>
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<div class="rm-layout">
+
+<aside class="rm-sidebar">
+
+<div class="rm-brand">
+  <div class="rm-logo">R</div>
+  RentMate
+</div>
+
+<nav class="rm-nav">
+  <a class="active" href="/admin/dashboard.html">📊 Dashboard</a>
+  <a href="/admin/properties.html">🛡️ Verification</a>
+  <a href="/admin/users.html">👥 Users</a>
+  <a href="/admin/reports.html">📈 Reports</a>
+</nav>
+
+<div class="rm-sidebar-bottom">
+  <a href="/">🌐 Website</a>
+  <a href="#" onclick="logout()">↪ Logout</a>
+</div>
+
+</aside>
+
+<main class="rm-main">
+
+<header class="rm-topbar">
+  <div class="rm-topbar-title">Administration</div>
+  <div class="rm-user">
+    <div class="rm-avatar">A</div>
+    <span>Admin</span>
+  </div>
+</header>
+
+<div class="rm-content">
+
+<div class="rm-welcome">
+  <div>
+    <h1>RentMate control center</h1>
+    <div class="rm-muted">
+      Review and manage actual platform data.
+    </div>
+  </div>
+</div>
+
+<div class="rm-grid rm-grid-4">
+
+<div class="rm-card rm-stat">
+<div class="rm-stat-label">All Properties</div>
+<div id="all" class="rm-stat-value">—</div>
+</div>
+
+<div class="rm-card rm-stat">
+<div class="rm-stat-label">Pending</div>
+<div id="pending" class="rm-stat-value">—</div>
+</div>
+
+<div class="rm-card rm-stat">
+<div class="rm-stat-label">Approved</div>
+<div id="approved" class="rm-stat-value">—</div>
+</div>
+
+<div class="rm-card rm-stat">
+<div class="rm-stat-label">Rejected</div>
+<div id="rejected" class="rm-stat-value">—</div>
+</div>
+
+</div>
+
+<br>
+
+<div class="rm-card">
+
+<div class="rm-section-title">
+<h2>Pending Verification</h2>
+<button class="rm-btn rm-btn-secondary"
+onclick="location.href='/admin/properties.html'">
+Open verification
+</button>
+</div>
+
+<div id="pendingList" class="rm-grid rm-grid-2">
+<div class="rm-loading">Loading...</div>
+</div>
+
+</div>
+
+</div>
+</main>
+</div>
+
+<div class="rm-mobile-nav">
+<a href="/admin/dashboard.html"><span>📊</span>Dashboard</a>
+<a href="/admin/properties.html"><span>🛡️</span>Verify</a>
+<a href="/admin/users.html"><span>👥</span>Users</a>
+<a href="/admin/reports.html"><span>📈</span>Reports</a>
+</div>
+
+<script src="/js/rentmate-final.js"></script>
+
+<script>
+
+if(!RentMateFinal.token){
+ location.href="/login.html?redirect=/admin/dashboard.html";
+}
+
+function logout(){
+ RentMateFinal.logout();
+}
+
+async function load(){
+
+ try{
+
+   const data=
+     await RentMateFinal.api("/api/admin/properties");
+
+   const list=data.properties||[];
+
+   all.textContent=list.length;
+
+   pending.textContent=
+     list.filter(x=>x.status==="PENDING").length;
+
+   approved.textContent=
+     list.filter(x=>x.status==="APPROVED").length;
+
+   rejected.textContent=
+     list.filter(x=>x.status==="REJECTED").length;
+
+   const pendingItems=
+     list.filter(x=>x.status==="PENDING");
+
+   if(!pendingItems.length){
+
+     pendingList.innerHTML=`
+       <div class="rm-empty">
+         <div class="rm-empty-icon">✓</div>
+         <h3>No pending verification</h3>
+         <p class="rm-muted">
+           New owner submissions will appear here.
+         </p>
+       </div>
+     `;
+
+     return;
+   }
+
+   pendingList.innerHTML=
+     pendingItems.slice(0,6).map(p=>{
+
+       const img=p.images?.[0]||"";
+
+       return `
+       <article class="rm-card rm-property">
+
+       ${
+        img
+        ? `<img class="rm-property-image"
+             src="${RentMateFinal.escape(img)}">`
+        : `<div class="rm-property-image"></div>`
+       }
+
+       <div class="rm-property-body">
+
+       <h3 class="rm-property-title">
+         ${RentMateFinal.escape(p.title)}
+       </h3>
+
+       <div class="rm-property-meta">
+         ${RentMateFinal.escape(p.area||"")}
+         ${p.city?", "+RentMateFinal.escape(p.city):""}
+       </div>
+
+       <div class="rm-property-price">
+         ${RentMateFinal.money(p.rent)}
+       </div>
+
+       <div class="rm-actions">
+
+       <button class="rm-btn rm-btn-success"
+       onclick="statusUpdate('${p.id}','APPROVED')">
+       Approve
+       </button>
+
+       <button class="rm-btn rm-btn-danger"
+       onclick="reject('${p.id}')">
+       Reject
+       </button>
+
+       </div>
+
+       </div>
+
+       </article>
+       `;
+
+     }).join("");
+
+ }catch(e){
+
+   pendingList.innerHTML=`
+   <div class="rm-empty">
+     <h3>Unable to load</h3>
+     <p>${RentMateFinal.escape(e.message)}</p>
+   </div>
+   `;
+ }
+}
+
+async function statusUpdate(id,status,reason=""){
+
+ try{
+
+   await RentMateFinal.api(
+     "/api/admin/properties/"+id+"/status",
+     {
+       method:"PATCH",
+       body:JSON.stringify({status,reason})
+     }
+   );
+
+   load();
+
+ }catch(e){
+   alert(e.message);
+ }
+}
+
+function reject(id){
+
+ const reason=prompt(
+   "Enter rejection reason:"
+ );
+
+ if(reason===null)return;
+
+ statusUpdate(id,"REJECTED",reason);
+}
+
+load();
+
+</script>
+
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

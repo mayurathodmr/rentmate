@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="theme-color" content="#0f172a">
+<title>RentMate — Find a place you'll love</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+<style>
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+:root{
+  --bg:#f7f8fc;
+  --card:#ffffff;
+  --text:#111827;
+  --muted:#6b7280;
+  --primary:#5b5ce2;
+  --primary-dark:#4546c7;
+  --line:#e7e9f0;
+  --shadow:0 20px 60px rgba(20,25,60,.10);
+}
+
+body{
+  font-family:"DM Sans",sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  overflow-x:hidden;
+}
+
+body:before{
+  content:"";
+  position:fixed;
+  width:420px;
+  height:420px;
+  right:-180px;
+  top:-180px;
+  background:rgba(91,92,226,.13);
+  filter:blur(90px);
+  border-radius:50%;
+  pointer-events:none;
+}
+
+nav{
+  width:min(1180px,92%);
+  margin:auto;
+  height:82px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.logo{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  font-family:"Plus Jakarta Sans",sans-serif;
+  font-size:21px;
+  font-weight:800;
+  letter-spacing:-.5px;
+}
+
+.logo-icon{
+  width:40px;
+  height:40px;
+  border-radius:13px;
+  display:grid;
+  place-items:center;
+  color:white;
+  background:linear-gradient(135deg,#6b6ce9,#4546c7);
+  box-shadow:0 10px 25px rgba(91,92,226,.28);
+}
+
+.nav-actions{
+  display:flex;
+  gap:10px;
+  align-items:center;
+}
+
+.btn{
+  border:0;
+  cursor:pointer;
+  font:600 14px "DM Sans";
+  padding:12px 19px;
+  border-radius:12px;
+  transition:.2s ease;
+}
+
+.btn:hover{
+  transform:translateY(-2px);
+}
+
+.btn-light{
+  background:white;
+  color:var(--text);
+  border:1px solid var(--line);
+}
+
+.btn-primary{
+  color:white;
+  background:var(--primary);
+  box-shadow:0 10px 24px rgba(91,92,226,.22);
+}
+
+.hero{
+  width:min(1180px,92%);
+  margin:55px auto 0;
+  display:grid;
+  grid-template-columns:1.02fr .98fr;
+  gap:55px;
+  align-items:center;
+}
+
+.badge{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 12px;
+  border:1px solid #e3e4f8;
+  background:#f0f0ff;
+  color:#4d4ecb;
+  border-radius:100px;
+  font-size:12px;
+  font-weight:700;
+  margin-bottom:20px;
+}
+
+.dot{
+  width:7px;
+  height:7px;
+  background:#5b5ce2;
+  border-radius:50%;
+  box-shadow:0 0 0 5px rgba(91,92,226,.1);
+}
+
+h1{
+  font-family:"Plus Jakarta Sans",sans-serif;
+  font-size:clamp(42px,5.5vw,72px);
+  line-height:1.02;
+  letter-spacing:-3px;
+  max-width:680px;
+}
+
+.gradient{
+  background:linear-gradient(100deg,#5b5ce2,#8b5cf6);
+  -webkit-background-clip:text;
+  color:transparent;
+}
+
+.hero-text{
+  color:var(--muted);
+  font-size:17px;
+  line-height:1.7;
+  max-width:570px;
+  margin:25px 0 30px;
+}
+
+.hero-actions{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+.search-box{
+  margin-top:38px;
+  padding:9px;
+  background:white;
+  border:1px solid var(--line);
+  border-radius:18px;
+  display:flex;
+  align-items:center;
+  box-shadow:var(--shadow);
+  max-width:620px;
+}
+
+.search-icon{
+  width:48px;
+  text-align:center;
+  font-size:20px;
+}
+
+.search-box input{
+  border:0;
+  outline:0;
+  flex:1;
+  min-width:0;
+  font:15px "DM Sans";
+  color:var(--text);
+}
+
+.search-box button{
+  border:0;
+  background:var(--primary);
+  color:white;
+  padding:13px 20px;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer;
+}
+
+.visual{
+  position:relative;
+}
+
+.property-card{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:28px;
+  overflow:hidden;
+  box-shadow:var(--shadow);
+  transform:rotate(1.5deg);
+  transition:.4s ease;
+}
+
+.property-card:hover{
+  transform:rotate(0) translateY(-6px);
+}
+
+.property-image{
+  height:330px;
+  background:
+    linear-gradient(180deg,transparent 45%,rgba(0,0,0,.55)),
+    url("https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?auto=format&fit=crop&w=1200&q=85")
+    center/cover;
+}
+
+.property-content{
+  padding:22px;
+}
+
+.property-top{
+  display:flex;
+  justify-content:space-between;
+  gap:20px;
+}
+
+.property-title{
+  font-family:"Plus Jakarta Sans";
+  font-size:19px;
+  font-weight:700;
+}
+
+.price{
+  font-size:20px;
+  font-weight:800;
+  color:var(--primary);
+}
+
+.location{
+  color:var(--muted);
+  font-size:13px;
+  margin-top:7px;
+}
+
+.meta{
+  display:flex;
+  gap:18px;
+  margin-top:18px;
+  padding-top:17px;
+  border-top:1px solid var(--line);
+  color:#555b6e;
+  font-size:13px;
+}
+
+.verified{
+  position:absolute;
+  top:18px;
+  right:18px;
+  background:rgba(255,255,255,.92);
+  backdrop-filter:blur(12px);
+  padding:8px 12px;
+  border-radius:100px;
+  font-size:12px;
+  font-weight:700;
+}
+
+.stats{
+  width:min(1180px,92%);
+  margin:90px auto 50px;
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:18px;
+}
+
+.stat{
+  background:white;
+  border:1px solid var(--line);
+  border-radius:20px;
+  padding:25px;
+}
+
+.stat strong{
+  display:block;
+  font-family:"Plus Jakarta Sans";
+  font-size:28px;
+}
+
+.stat span{
+  color:var(--muted);
+  font-size:13px;
+}
+
+footer{
+  border-top:1px solid var(--line);
+  padding:25px 4%;
+  color:var(--muted);
+  font-size:13px;
+  text-align:center;
+}
+
+@media(max-width:850px){
+  nav{
+    height:72px;
+  }
+
+  .nav-actions .btn-light{
+    display:none;
+  }
+
+  .hero{
+    grid-template-columns:1fr;
+    margin-top:35px;
+    gap:40px;
+  }
+
+  h1{
+    letter-spacing:-2px;
+  }
+
+  .property-image{
+    height:260px;
+  }
+
+  .stats{
+    grid-template-columns:1fr;
+    margin-top:55px;
+  }
+}
+
+@media(max-width:480px){
+  .nav-actions .btn-primary{
+    padding:10px 14px;
+  }
+
+  .hero-text{
+    font-size:15px;
+  }
+
+  .search-box{
+    padding:7px;
+  }
+
+  .search-box button{
+    padding:12px;
+  }
+
+  .search-box input{
+    width:90px;
+  }
+
+  .property-card{
+    border-radius:22px;
+  }
+}
+</style>
+<link rel="stylesheet" href="/css/rentmate-premium.css">
+<link rel="stylesheet" href="/css/rentmate-guidance.css">
+<link rel="stylesheet" href="/css/rentmate-student.css">
+<link rel="stylesheet" href="/css/rentmate-app.css">
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<nav>
+  <div class="logo">
+    <div class="logo-icon">⌂</div>
+    RentMate
+  </div>
+
+  <div class="nav-actions">
+    <button class="btn btn-light" onclick="goLogin()">Log in</button>
+    <button class="btn btn-primary" onclick="goRegister()">Get started</button>
+  </div>
+</nav>
+
+<main>
+
+<section class="hero">
+
+  <div>
+    <div class="badge">
+      <span class="dot"></span>
+      A simpler way to find your next home
+    </div>
+
+    <h1>
+      Find a place<br>
+      you'll <span class="gradient">love.</span>
+    </h1>
+
+    <p class="hero-text">
+      Discover verified rooms, flats, PGs and rental homes
+      around you. Search smarter, connect directly and
+      find your next place with confidence.
+    </p>
+
+    <div class="hero-actions">
+      <button class="btn btn-primary" onclick="goSearch()">
+        Explore properties →
+      </button>
+
+      <button class="btn btn-light" onclick="goRegister()">
+        List your property
+      </button>
+    </div>
+
+    <div class="search-box">
+      <div class="search-icon">⌕</div>
+      <input id="searchInput" placeholder="Search city, area or property...">
+      <button onclick="goSearch()">Search</button>
+    </div>
+  </div>
+
+  <div class="visual">
+
+    <div class="property-card">
+
+      <div class="property-image"></div>
+
+      <div class="property-content">
+
+        <div class="property-top">
+          <div>
+            <div class="property-title">Modern 2 BHK Apartment</div>
+            <div class="location">📍 Ahmednagar, Maharashtra</div>
+          </div>
+
+          <div class="price">₹12k</div>
+        </div>
+
+        <div class="meta">
+          <span>🛏 2 Beds</span>
+          <span>🚿 2 Baths</span>
+          <span>✨ Furnished</span>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="verified">✓ Verified listing</div>
+
+  </div>
+
+</section>
+
+<section class="stats">
+
+  <div class="stat">
+    <strong>Verified</strong>
+    <span>Properties reviewed before publishing</span>
+  </div>
+
+  <div class="stat">
+    <strong>Simple</strong>
+    <span>Search and contact without complicated steps</span>
+  </div>
+
+  <div class="stat">
+    <strong>Local</strong>
+    <span>Find properties around your preferred location</span>
+  </div>
+
+</section>
+
+</main>
+
+<footer>
+  © 2026 RentMate · Find your place. Feel at home.
+</footer>
+
+<script>
+function goLogin(){
+  window.location.href="/login.html";
+}
+
+function goRegister(){
+  window.location.href="/register.html";
+}
+
+function goSearch(){
+  const q=document.getElementById("searchInput").value.trim();
+
+  if(q){
+    localStorage.setItem("rentmate_search",q);
+  }
+
+  window.location.href="/login.html";
+}
+</script>
+
+<script src="/js/rentmate-premium.js" defer></script>
+<script src="/js/rentmate-guidance.js" defer></script>
+<script src="/js/rentmate-location-direct.js" defer></script>
+<script src="/js/rentmate-student.js" defer></script>
+<script src="/js/rentmate-app.js" defer></script>
+<script src="/js/rentmate-final.js"></script>
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>

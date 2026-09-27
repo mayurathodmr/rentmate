@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RentMate — Create Account</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;
+ font-family:Arial,sans-serif;
+ background:#f6f7fb;
+ color:#171a27;
+}
+.wrap{
+ min-height:100vh;
+ display:grid;
+ place-items:center;
+ padding:25px;
+}
+.card{
+ width:min(500px,100%);
+ background:white;
+ padding:35px;
+ border-radius:25px;
+ box-shadow:0 25px 70px #20234a18;
+}
+.logo{
+ font-size:25px;
+ font-weight:800;
+ margin-bottom:25px;
+}
+h1{margin:0 0 8px}
+p{color:#777}
+input,select{
+ width:100%;
+ padding:14px;
+ margin-top:7px;
+ margin-bottom:15px;
+ border:1px solid #ddd;
+ border-radius:12px;
+ font-size:15px;
+}
+button{
+ width:100%;
+ padding:15px;
+ border:0;
+ border-radius:12px;
+ background:#635bff;
+ color:white;
+ font-weight:700;
+ cursor:pointer;
+}
+.role{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:10px;
+}
+.error{
+ color:#d33;
+ font-size:13px;
+ margin-bottom:12px;
+}
+a{color:#635bff}
+</style>
+<link rel="stylesheet" href="/css/rentmate-premium.css">
+<link rel="stylesheet" href="/css/rentmate-guidance.css">
+<link rel="stylesheet" href="/css/rentmate-student.css">
+<link rel="stylesheet" href="/css/rentmate-app.css">
+<link rel="stylesheet" href="/css/rentmate-final.css">
+</head>
+
+<body>
+
+<div class="wrap">
+<div class="card">
+
+<div class="logo">⌂ RentMate</div>
+
+<h1>Create your account</h1>
+<p>Use your real details. No demo account is created.</p>
+
+<div id="error" class="error"></div>
+
+<form id="registerForm">
+
+<label>Full name</label>
+<input name="name" required>
+
+<label>Email</label>
+<input name="email" type="email" required>
+
+<label>Phone</label>
+<input name="phone" type="tel">
+
+<label>Password</label>
+<input name="password" type="password" minlength="6" required>
+
+<label>Account type</label>
+
+<div class="role">
+<label>
+<input type="radio" name="role" value="USER" checked>
+ Tenant
+</label>
+
+<label>
+<input type="radio" name="role" value="OWNER">
+ Owner
+</label>
+</div>
+
+<button type="submit">Create account</button>
+
+</form>
+
+<p style="text-align:center">
+Already have an account?
+<a href="/login.html">Login</a>
+</p>
+
+</div>
+</div>
+
+<script>
+
+document.getElementById("registerForm")
+.addEventListener("submit",async e=>{
+
+ e.preventDefault();
+
+ const form=new FormData(e.target);
+
+ const body={
+   name:form.get("name"),
+   email:form.get("email"),
+   phone:form.get("phone"),
+   password:form.get("password"),
+   role:form.get("role")
+ };
+
+ const error=document.getElementById("error");
+
+ error.textContent="Creating account...";
+
+ try{
+
+   const response=await fetch(
+     "/api/auth/register",
+     {
+       method:"POST",
+       headers:{
+         "Content-Type":"application/json"
+       },
+       body:JSON.stringify(body)
+     }
+   );
+
+   const data=await response.json();
+
+   if(!data.success){
+     error.textContent=data.error;
+     return;
+   }
+
+   localStorage.setItem(
+     "rentmate_token",
+     data.token
+   );
+
+   localStorage.setItem(
+     "rentmate_user",
+     JSON.stringify(data.user)
+   );
+
+   if(data.user.role==="OWNER"){
+     location.href="/owner/dashboard.html";
+   }else{
+     location.href="/user/dashboard.html";
+   }
+
+ }catch{
+
+   error.textContent=
+     "Server connection failed";
+
+ }
+
+});
+
+</script>
+
+<script src="/js/rentmate-premium.js" defer></script>
+<script src="/js/rentmate-guidance.js" defer></script>
+<script src="/js/rentmate-location-direct.js" defer></script>
+<script src="/js/rentmate-student.js" defer></script>
+<script src="/js/rentmate-app.js" defer></script>
+<script src="/js/rentmate-final.js"></script>
+<script src="/js/rentmate-real-system.js"></script>
+<script id="rentmate-sw-register">
+if("serviceWorker" in navigator){
+ navigator.serviceWorker.register("/sw.js").catch(()=>{});
+}
+</script>
+</body>
+</html>
